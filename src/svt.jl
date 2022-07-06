@@ -1,16 +1,33 @@
 include("util.jl")
 
+# Base.@kwdef mutable struct Admm_State
+#   objval_itr = zeros((MAX_ITER))
+#   p_feas_itr = zeros((MAX_ITER))
+#   d_feas_itr = zeros((MAX_ITER))
+# end
+
 export block_svt
 export svt
 
 function admm_nnm(z, x_known_idx, num_iterations, lambda::Float64=1)
+  # state = Admm_State()
   S = zeros((minimum(size(z))))
-  for _ = 1:num_iterations
+  for itr = 1:num_iterations
     U, S, V = svd(z)
     for i in 1:size(Diagonal(S))[1]
       Diagonal(S)[i, i] = max(Diagonal(S)[i, i] - lambda, 0)
     end
     x = U * Diagonal(S) * transpose(V)
+
+    objective = sum(Diagonal(S))
+
+    p_feas = norm(getindex(z, x_known_idx) - getindex(x, x_known_idx), 2)
+    d_feas = Diagonal(S)[1, 1]
+
+    # state.objval_itr[itr] = objective
+    # state.p_feas_itr[itr] = p_feas
+    # state.d_feas_itr[itr] = d_feas
+
     z = x
   end
   return z
@@ -30,7 +47,9 @@ function block_svt(z, c, patch_sz, num_iterations, lambda::Float64=1e-7, overlap
 		for j in 1:Int(size(z)[2]/patch_sz[2]*overlap_y)-overlap_y
 			idx_x = Int64(patch_sz[1]/2*i):Int64(patch_sz[1]/2*i)+patch_sz[1]
 			idx_y = Int64(patch_sz[2]/overlap_y*j):Int64(patch_sz[2]/overlap_y*j)+patch_sz[2]
+			# x_known_idx = findall(>(0.5), z[idx_x, idx_y])
 			result[idx_x, idx_y] += c * admm_nnm(z[idx_x, idx_y], [], num_iterations, lambda)
+			# display((idx_x, idx_y))
 		end
 	end
 	return result
@@ -43,6 +62,5 @@ Returns a compressed image using singular value thresholding.
 """
 function svt(img, lambda, num_iterations)
   result = admm_nnm(img, [], num_iterations, 1e-7*lambda)
-  result = [vec(result[:,i]) for i in 1:size(result)[2]]
   return result
 end
