@@ -10,3 +10,11 @@ HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Noise = "81d43f40-5267-43b7-ae1c-8b967f377efa"
+
+[compat]
+Deconvolution = "1.1.1"
+FFTW = "1.5.0"
+HDF5 = "0.16.13"
+ImageFiltering = "0.7.3"
+Noise = "0.3.2"
+julia = "1.8"
